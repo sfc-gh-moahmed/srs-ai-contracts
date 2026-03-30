@@ -1,29 +1,7 @@
 ---
 title: "SRS AI Contracts — Pricing Extraction & Billing Anomaly Detection"
 author: "Snowflake"
-theme: default
-marp: true
-paginate: true
-style: |
-  section { font-size: 16px; padding: 20px 30px 15px 30px; }
-  table { font-size: 13px; margin: 2px 0; }
-  th { background: #29B5E8; color: white; }
-  h1 { color: #29B5E8; font-size: 30px; margin: 0 0 4px 0; }
-  h2 { color: #11567F; font-size: 22px; margin: 0 0 4px 0; }
-  h3 { font-size: 18px; margin: 0 0 2px 0; }
-  .columns { display: flex; gap: 1.2rem; }
-  .col { flex: 1; }
-  code { font-size: 12px; }
-  pre { font-size: 12px; margin: 4px 0; }
-  blockquote { font-size: 14px; margin: 4px 0; border-left: 4px solid #29B5E8; }
-  li { font-size: 15px; margin: 1px 0; }
-  p { margin: 4px 0; }
-  ul, ol { margin: 4px 0; }
-  .small { font-size: 12px; }
-  .highlight { background: #E8F4FD; padding: 8px; border-radius: 6px; margin: 4px 0; }
-  .red { color: #FF4444; font-weight: bold; }
-  .green { color: #4CAF50; font-weight: bold; }
-  .orange { color: #FF6B35; font-weight: bold; }
+
 ---
 
 # SRS AI Contracts
