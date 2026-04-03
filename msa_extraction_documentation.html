@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSA Contract Extraction Pipeline — Technical Documentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --azenta-blue: #11567F;
+    --azenta-sky: #29B5E8;
+    --azenta-dark: #0A3A54;
+    --azenta-light: #E8F4FC;
+    --snow-purple: #7B68EE;
+    --snow-teal: #00BCD4;
+    --success: #2E7D32;
+    --warning: #E65100;
+    --bg: #FAFBFC;
+    --text: #1A1A2E;
+    --muted: #5A6472;
+    --border: #DDE3EA;
+    --code-bg: #F0F4F8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  /* ── PAGE BREAKS ─────────────────────────── */
+  .page-break { page-break-before: always; break-before: page; }
+  .no-break   { page-break-inside: avoid; break-inside: avoid; }
+
+  /* ── COVER PAGE ──────────────────────────── */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(145deg, var(--azenta-dark) 0%, var(--azenta-blue) 55%, var(--azenta-sky) 100%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; color: #fff; padding: 60px 40px;
+  }
+  .cover .logo-band {
+    display: flex; align-items: center; gap: 18px; margin-bottom: 40px;
+  }
+  .cover .logo-band .badge {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .cover h1 {
+    font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 14px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .cover h2 {
+    font-size: 18px; font-weight: 400; opacity: 0.85; margin-bottom: 50px;
+  }
+  .cover .meta-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    width: 100%; max-width: 720px; margin-bottom: 50px;
+  }
+  .cover .meta-card {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px; padding: 18px 14px;
+  }
+  .cover .meta-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 6px; }
+  .cover .meta-card .value { font-size: 16px; font-weight: 600; }
+  .cover .tag-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .cover .tag {
+    background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 14px;
+    font-size: 11px; font-weight: 500;
+  }
+
+  /* ── MAIN LAYOUT ─────────────────────────── */
+  .content { max-width: 1040px; margin: 0 auto; padding: 50px 40px; }
+
+  /* ── SECTION HEADERS ─────────────────────── */
+  .section-header {
+    border-left: 4px solid var(--azenta-sky);
+    padding-left: 16px; margin-bottom: 24px; margin-top: 40px;
+  }
+  .section-header .num {
+    font-size: 11px; font-weight: 600; color: var(--azenta-sky);
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;
+  }
+  .section-header h2 { font-size: 22px; font-weight: 700; color: var(--azenta-dark); }
+  .section-header p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  h3 { font-size: 15px; font-weight: 600; color: var(--azenta-blue); margin: 24px 0 10px; }
+  h4 { font-size: 13px; font-weight: 600; color: var(--text); margin: 16px 0 8px; }
+
+  p  { margin-bottom: 10px; }
+
+  /* ── CARDS ───────────────────────────────── */
+  .card {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 16px;
+  }
+  .card.blue   { border-left: 4px solid var(--azenta-blue); }
+  .card.sky    { border-left: 4px solid var(--azenta-sky); }
+  .card.green  { border-left: 4px solid var(--success); }
+  .card.orange { border-left: 4px solid var(--warning); }
+
+  /* ── GRID ────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* ── STAT BOX ────────────────────────────── */
+  .stat-box {
+    background: linear-gradient(135deg, var(--azenta-blue) 0%, var(--azenta-sky) 100%);
+    color: #fff; border-radius: 10px; padding: 18px 20px; text-align: center;
+  }
+  .stat-box .num { font-size: 30px; font-weight: 700; }
+  .stat-box .lbl { font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+  /* ── CODE BLOCK ──────────────────────────── */
+  pre {
+    background: #1E2532; color: #E8EDF3; border-radius: 8px;
+    padding: 16px 18px; margin: 12px 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 11px; line-height: 1.65;
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 11px; background: var(--code-bg); padding: 2px 5px;
+    border-radius: 3px; color: var(--azenta-dark);
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+  /* Syntax highlight helpers */
+  .kw  { color: #7EC8E3; }
+  .fn  { color: #F7C59F; }
+  .str { color: #A8D8A8; }
+  .cmt { color: #6E7F93; font-style: italic; }
+  .num-c { color: #FFD580; }
+
+  /* ── TABLE ───────────────────────────────── */
+  table {
+    width: 100%; border-collapse: collapse; margin: 12px 0;
+    font-size: 12px;
+  }
+  th {
+    background: var(--azenta-blue); color: #fff;
+    padding: 8px 12px; text-align: left; font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  td { padding: 7px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #F7F9FB; }
+  tr:hover td { background: var(--azenta-light); }
+
+  /* ── FLOW DIAGRAM ────────────────────────── */
+  .flow {
+    display: flex; align-items: center; gap: 0;
+    flex-wrap: nowrap; margin: 16px 0; overflow-x: auto;
+    padding: 10px 0;
+  }
+  .flow-box {
+    background: #fff; border: 2px solid var(--azenta-blue);
+    border-radius: 8px; padding: 10px 14px; text-align: center;
+    font-size: 11px; font-weight: 600; min-width: 110px;
+    color: var(--azenta-dark); flex-shrink: 0;
+  }
+  .flow-box.sky   { border-color: var(--azenta-sky); background: var(--azenta-light); }
+  .flow-box.green { border-color: var(--success); }
+  .flow-box.cache { border-color: #9C6FDE; background: #F5F0FF; border-style: dashed; }
+  .flow-arrow {
+    font-size: 18px; color: var(--muted); padding: 0 6px; flex-shrink: 0;
+  }
+  .flow-label {
+    font-size: 9px; color: var(--muted); margin-top: 3px; display: block;
+  }
+
+  /* ── PIPELINE COMPARE ────────────────────── */
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;
+  }
+  .pipe-card {
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .pipe-card.a { background: linear-gradient(135deg, #EBF5FC, #D3EDF9); border: 1px solid var(--azenta-sky); }
+  .pipe-card.b { background: linear-gradient(135deg, #F0EBF9, #DDD0F2); border: 1px solid #9C6FDE; }
+  .pipe-card h3 { margin-top: 0; }
+  .pipe-card.a h3 { color: var(--azenta-blue); }
+  .pipe-card.b h3 { color: #5E35B1; }
+
+  /* ── BADGE ───────────────────────────────── */
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge.blue   { background: var(--azenta-light); color: var(--azenta-blue); }
+  .badge.sky    { background: #E0F7FA; color: #00838F; }
+  .badge.green  { background: #E8F5E9; color: var(--success); }
+  .badge.purple { background: #F3E5F5; color: #7B1FA2; }
+  .badge.orange { background: #FFF3E0; color: var(--warning); }
+  .badge.red    { background: #FFEBEE; color: #C62828; }
+
+  /* ── CALLOUT ─────────────────────────────── */
+  .callout {
+    border-radius: 8px; padding: 14px 18px; margin: 14px 0;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .callout.info    { background: #E3F2FD; border-left: 4px solid #1976D2; }
+  .callout.tip     { background: #E8F5E9; border-left: 4px solid var(--success); }
+  .callout.warning { background: #FFF8E1; border-left: 4px solid #F9A825; }
+  .callout.danger  { background: #FFEBEE; border-left: 4px solid #C62828; }
+  .callout .icon   { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+  .callout .body   { flex: 1; font-size: 12px; line-height: 1.5; }
+  .callout .body strong { font-weight: 600; }
+
+  /* ── FILE TREE ───────────────────────────── */
+  .file-tree {
+    background: #1E2532; color: #E8EDF3; border-radius: 8px;
+    padding: 16px 20px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; line-height: 1.8;
+  }
+  .file-tree .dir  { color: #7EC8E3; font-weight: 600; }
+  .file-tree .file { color: #A8D8A8; }
+  .file-tree .new  { color: #FFD580; }
+  .file-tree .desc { color: #6E7F93; font-size: 10.5px; margin-left: 8px; }
+
+  /* ── TIMELINE ────────────────────────────── */
+  .timeline { margin: 16px 0; }
+  .tl-item  { display: flex; gap: 14px; margin-bottom: 16px; }
+  .tl-dot   {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--azenta-blue); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .tl-body  { flex: 1; }
+  .tl-body h4 { margin: 0 0 4px; font-size: 13px; color: var(--azenta-dark); }
+  .tl-body p  { font-size: 12px; color: var(--muted); margin: 0; }
+
+  /* ── MODEL TABLE HIGHLIGHT ───────────────── */
+  .model-blocked td:first-child { color: #C62828; font-weight: 600; }
+  .model-best    td:first-child { color: var(--success); font-weight: 600; }
+
+  /* ── FOOTER ──────────────────────────────── */
+  .footer {
+    margin-top: 60px; padding: 24px 40px;
+    background: var(--azenta-dark); color: rgba(255,255,255,0.7);
+    text-align: center; font-size: 11px;
+  }
+  .footer strong { color: #fff; }
+
+  /* ── PRINT ───────────────────────────────── */
+  @media print {
+    body { font-size: 11px; }
+    .cover { min-height: auto; padding: 40px; }
+    .cover h1 { font-size: 28px; }
+    .content { padding: 30px 30px; }
+    pre { font-size: 10px; }
+    .page-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     COVER PAGE
+═══════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="logo-band">
+    <div class="badge">Azenta Life Sciences</div>
+    <div class="badge">Snowflake Cortex AI</div>
+    <div class="badge">Confidential</div>
+  </div>
+
+  <h1>MSA Contract Extraction Pipeline</h1>
+  <h2>End-to-End AI Document Intelligence with Snowflake Cortex</h2>
+
+  <div class="meta-grid">
+    <div class="meta-card">
+      <div class="label">Documents</div>
+      <div class="value">2 MSA PDFs (31 pages)</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Pipelines</div>
+      <div class="value">A: AI_EXTRACT &nbsp;|&nbsp; B: AI_COMPLETE</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Scale Target</div>
+      <div class="value">~600 MSA Documents</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Database</div>
+      <div class="value">SRS_AI_CONTRACTS</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Output Schema</div>
+      <div class="value">SI.PUBLIC</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Warehouse</div>
+      <div class="value">SRS_CONTRACTS_WH (XS)</div>
+    </div>
+  </div>
+
+  <div class="tag-row">
+    <span class="tag">AI_PARSE_DOCUMENT</span>
+    <span class="tag">AI_EXTRACT</span>
+    <span class="tag">AI_COMPLETE</span>
+    <span class="tag">Page-Split Caching</span>
+    <span class="tag">mistral-large2</span>
+    <span class="tag">llama3.3-70b</span>
+    <span class="tag">claude-4-sonnet</span>
+    <span class="tag">Streamlit in Snowflake</span>
+    <span class="tag">Validation Views</span>
+    <span class="tag">GitHub</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Contents</div>
+    <h2>Table of Contents</h2>
+  </div>
+
+  <table>
+    <thead><tr><th>#</th><th>Section</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Project Overview &amp; Business Context</td><td>Customer use case, scale requirements, Snowflake deployment</td></tr>
+      <tr><td>2</td><td>Architecture Overview</td><td>System components, data flow, parse-cache pattern</td></tr>
+      <tr><td>3</td><td>Repository Structure</td><td>All files created, naming conventions</td></tr>
+      <tr><td>4</td><td>Pipeline A — AI_PARSE + AI_EXTRACT</td><td>Schema-based extraction, ARRAY_GENERATE_RANGE pattern</td></tr>
+      <tr><td>5</td><td>Pipeline B — AI_PARSE + AI_COMPLETE</td><td>Prompt-based extraction, swappable LLM models</td></tr>
+      <tr><td>6</td><td>Token Limit Strategy</td><td>Why page_split=TRUE, model selection, arctic guard</td></tr>
+      <tr><td>7</td><td>Output Tables (SI.PUBLIC)</td><td>Storage Pricing + Management Fees table schemas</td></tr>
+      <tr><td>8</td><td>Validation Views</td><td>Ground-truth comparison, match status logic</td></tr>
+      <tr><td>9</td><td>Streamlit Application</td><td>5-tab app, pipeline runner, model comparison</td></tr>
+      <tr><td>10</td><td>Deployment Guide</td><td>Step-by-step quickstart, batch processing</td></tr>
+      <tr><td>11</td><td>Model Selection Guide</td><td>Context windows, cost/quality tradeoffs</td></tr>
+      <tr><td>12</td><td>Scale Analysis (600 MSAs)</td><td>Cost estimates, caching savings, performance</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 1 — PROJECT OVERVIEW
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 1</div>
+    <h2>Project Overview &amp; Business Context</h2>
+    <p>Automating MSA rate card extraction for Azenta Life Sciences using Snowflake Cortex AI</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="stat-box"><div class="num">2</div><div class="lbl">MSA PDFs Processed</div></div>
+    <div class="stat-box"><div class="num">31</div><div class="lbl">Total Pages Parsed</div></div>
+    <div class="stat-box"><div class="num">4</div><div class="lbl">LLM Models Available</div></div>
+  </div>
+
+  <h3>Business Problem</h3>
+  <p>Azenta Life Sciences manages biorepository services for pharmaceutical clients (BMS, Sanofi, etc.) under Master Service Agreements. Each MSA contains dense pricing tables covering:</p>
+  <ul style="margin:8px 0 12px 20px; line-height:1.9;">
+    <li><strong>Storage Pricing</strong> — 6 temperature conditions × 11 sample-size columns × 5–6 quantity tiers per page</li>
+    <li><strong>Management Fees</strong> — Project initiation, sample administration, lab services, professional services, additional services</li>
+    <li><strong>Multi-currency</strong> — USD (North America), EUR (Griesheim), SGD (Singapore)</li>
+    <li><strong>Multi-region</strong> — North America, Europe, Singapore, Beijing</li>
+  </ul>
+  <p>Manually extracting pricing from ~600 MSA documents is error-prone and time-consuming. This pipeline automates extraction with AI, enabling systematic pricing analysis and contract compliance validation.</p>
+
+  <h3>Input Documents</h3>
+  <div class="grid-2">
+    <div class="card blue">
+      <h4>BMS - MSA AMD 3 06Jan2026 FE.pdf</h4>
+      <p><strong>Customer:</strong> Bristol-Myers Squibb (BMS)</p>
+      <p><strong>Pages:</strong> 13 | <strong>Effective:</strong> January 6, 2026</p>
+      <p><strong>Type:</strong> MSA Amendment 3</p>
+    </div>
+    <div class="card sky">
+      <h4>Sanofi_MSA.pdf</h4>
+      <p><strong>Customer:</strong> Sanofi</p>
+      <p><strong>Pages:</strong> 18 | <strong>Type:</strong> Master Service Agreement</p>
+      <p><strong>Regions:</strong> NA, EU, APAC</p>
+    </div>
+  </div>
+
+  <h3>Snowflake Deployment Context</h3>
+  <table>
+    <thead><tr><th>Component</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Primary Database</td><td><code>SRS_AI_CONTRACTS</code></td><td>Existing, pre-deployed</td></tr>
+      <tr><td>Output Database</td><td><code>SI</code></td><td>Production output schema</td></tr>
+      <tr><td>Output Schema</td><td><code>SI.PUBLIC</code></td><td>Configurable via SET variables</td></tr>
+      <tr><td>Warehouse</td><td><code>SRS_CONTRACTS_WH</code></td><td>XS, auto-suspend 60s</td></tr>
+      <tr><td>PDF Stage</td><td><code>SRS_AI_CONTRACTS.RAW_DATA.CONTRACT_STAGE</code></td><td>Internal, directory-enabled</td></tr>
+      <tr><td>Streamlit Stage</td><td><code>SRS_AI_CONTRACTS.RAW_DATA.STREAMLIT_STAGE</code></td><td>For app.py deployment</td></tr>
+      <tr><td>Connection</td><td><code>DEMO</code></td><td>Active Snowflake CLI connection</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 2 — ARCHITECTURE OVERVIEW
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 2</div>
+    <h2>Architecture Overview</h2>
+    <p>Parse-once, extract-many pattern with dual pipeline comparison</p>
+  </div>
+
+  <h3>End-to-End Data Flow</h3>
+
+  <div class="flow">
+    <div class="flow-box sky">PDF Stage<span class="flow-label">@CONTRACT_STAGE</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">AI_PARSE_DOCUMENT<span class="flow-label">LAYOUT + page_split</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box cache">Parse Cache<span class="flow-label">PARSED_CONTRACTS_TEXT</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Pipeline A<span class="flow-label">AI_EXTRACT</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">Output Tables<span class="flow-label">SI.PUBLIC</span></div>
+  </div>
+
+  <div class="flow" style="margin-top:4px;">
+    <div class="flow-box" style="visibility:hidden; min-width:110px;"></div>
+    <div class="flow-arrow" style="visibility:hidden;">→</div>
+    <div class="flow-box" style="visibility:hidden; min-width:110px;"></div>
+    <div class="flow-arrow" style="visibility:hidden;">→</div>
+    <div class="flow-box cache">Parse Cache<span class="flow-label">reused — no re-parse</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color:#9C6FDE; background:#F5F0FF;">Pipeline B<span class="flow-label">AI_COMPLETE</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">Output Tables<span class="flow-label">same targets</span></div>
+  </div>
+
+  <div class="callout info" style="margin-top:14px;">
+    <div class="icon">💡</div>
+    <div class="body"><strong>Parse-Cache Pattern:</strong> <code>AI_PARSE_DOCUMENT</code> is billed per page (Arctic-TILT model). By caching parsed text in <code>PARSED_CONTRACTS_TEXT</code>, each PDF is parsed exactly once. Both Pipeline A and B read from the same cache, eliminating re-parsing costs when switching models or re-running extractions.</div>
+  </div>
+
+  <h3>System Components</h3>
+  <div class="grid-2">
+    <div class="card blue no-break">
+      <h4>Storage Layer</h4>
+      <ul style="margin-left:16px; line-height:1.9; font-size:12px;">
+        <li><code>PARSED_CONTRACTS_TEXT</code> — per-page parse cache</li>
+        <li><code>SRS_CONTRACT_CUSTOMER_PRICING_ALL_CURR_DATA_TEST</code> — storage pricing output</li>
+        <li><code>SRS_CONTRACT_CUSTOMER_SAMPLE_MGMT_PRICING_TEST</code> — management fees output</li>
+      </ul>
+    </div>
+    <div class="card sky no-break">
+      <h4>Compute Layer</h4>
+      <ul style="margin-left:16px; line-height:1.9; font-size:12px;">
+        <li><code>EXTRACT_PIPELINE_A</code> — stored procedure, AI_EXTRACT</li>
+        <li><code>EXTRACT_PIPELINE_B</code> — stored procedure, AI_COMPLETE + model param</li>
+        <li>Warehouse: <code>SRS_CONTRACTS_WH</code> (XS, auto-suspend)</li>
+      </ul>
+    </div>
+    <div class="card green no-break">
+      <h4>Analytics Layer</h4>
+      <ul style="margin-left:16px; line-height:1.9; font-size:12px;">
+        <li><code>EXTRACTION_VALIDATION_PRICING</code> — validation view</li>
+        <li><code>EXTRACTION_VALIDATION_MGMT</code> — management fee validation</li>
+        <li><code>EXTRACTION_VALIDATION_SUMMARY</code> — aggregate accuracy summary</li>
+      </ul>
+    </div>
+    <div class="card orange no-break">
+      <h4>Presentation Layer</h4>
+      <ul style="margin-left:16px; line-height:1.9; font-size:12px;">
+        <li><code>MSA_EXTRACTION_APP</code> — Streamlit in Snowflake (5 tabs)</li>
+        <li>Pipeline runner with live output</li>
+        <li>A vs B comparison with diff highlighting</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Why AI_PARSE_DOCUMENT + Separate Extraction?</h3>
+  <p>Snowflake's recommended best practice for complex documents is the two-stage approach:</p>
+  <table>
+    <thead><tr><th>Stage</th><th>Function</th><th>Purpose</th><th>Model</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Stage 1</strong></td><td><code>AI_PARSE_DOCUMENT</code></td><td>Layout-aware PDF → Markdown, preserves table structure</td><td>Arctic-TILT (90%+ table accuracy)</td></tr>
+      <tr><td><strong>Stage 2A</strong></td><td><code>AI_EXTRACT</code></td><td>Schema-defined extraction with parallel array output</td><td>arctic-extract (128K context)</td></tr>
+      <tr><td><strong>Stage 2B</strong></td><td><code>AI_COMPLETE</code></td><td>Prompt-based extraction with JSON response_format</td><td>Configurable (128K–200K context)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout tip">
+    <div class="icon">✓</div>
+    <div class="body"><strong>Why not AI_EXTRACT directly on the file?</strong> <code>AI_EXTRACT</code> can operate on raw files but uses OCR-level extraction without layout intelligence. For dense pricing matrices with complex column alignment, <code>AI_PARSE_DOCUMENT(mode='LAYOUT')</code> with Arctic-TILT produces significantly higher accuracy Markdown before extraction.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 3 — REPOSITORY STRUCTURE
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 3</div>
+    <h2>Repository Structure</h2>
+    <p>All files in the <code>srs-ai-contracts</code> GitHub repository</p>
+  </div>
+
+  <div class="file-tree">
+    <div><span class="dir">srs-ai-contracts/</span></div>
+    <div>&nbsp;&nbsp;<span class="dir">deploy/</span><span class="desc">← pre-existing infrastructure scripts</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">01_setup_database.sql</span><span class="desc">DB, schemas, warehouse, stage creation</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">02_create_tables.sql</span><span class="desc">CONTRACT_METADATA, BILLING_TRANSACTIONS, etc.</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">04_extraction_procedure.sql</span><span class="desc">Existing AI_EXTRACT procedure (reference pattern)</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">05_anomaly_views.sql</span><span class="desc">BILLING_ANOMALIES, ANOMALY_SUMMARY views</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">08_cortex_agent.sql</span><span class="desc">Cortex Agent with 3 tools</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="dir">pipelines/</span><span class="desc">← NEW: MSA extraction pipeline</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">10_create_extraction_tables.sql</span><span class="desc">DDL: parse cache + 2 output tables</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">11_upload_pdfs.sql</span><span class="desc">PUT commands + stage verification</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">12_pipeline_a_ai_parse_extract.sql</span><span class="desc">Pipeline A stored procedure (309 lines)</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">13_pipeline_b_ai_parse_complete.sql</span><span class="desc">Pipeline B stored procedure (304 lines)</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">14_validation_view.sql</span><span class="desc">3 validation views against ground-truth table</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">15_run_all.sql</span><span class="desc">Orchestrator: both pipelines, 3 models, verification</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">16_deploy_streamlit.sql</span><span class="desc">CREATE STREAMLIT DDL + stage upload instructions</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="dir">streamlit/</span><span class="desc">← NEW: Streamlit in Snowflake app</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="new">app.py</span><span class="desc">5-tab Streamlit app, 390 lines</span></div>
+    <div>&nbsp;</div>
+    <div>&nbsp;&nbsp;<span class="new">msa_extraction_pipeline.md</span><span class="desc">Marp presentation (15 slides, Kroki diagrams)</span></div>
+    <div>&nbsp;&nbsp;<span class="new">README_PIPELINES.md</span><span class="desc">Full deployment guide, quickstart, batch processing</span></div>
+    <div>&nbsp;&nbsp;<span class="new">msa_extraction_documentation.html</span><span class="desc">This document</span></div>
+  </div>
+
+  <h3>Script Execution Order</h3>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot">10</div>
+      <div class="tl-body">
+        <h4>10_create_extraction_tables.sql</h4>
+        <p>Creates <code>PARSED_CONTRACTS_TEXT</code> parse cache and both output tables in <code>SI.PUBLIC</code>. Run once per environment.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">11</div>
+      <div class="tl-body">
+        <h4>11_upload_pdfs.sql</h4>
+        <p>PUT commands to upload BMS and Sanofi PDFs to <code>@CONTRACT_STAGE</code>. Includes stage refresh and directory verification.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">12</div>
+      <div class="tl-body">
+        <h4>12_pipeline_a_ai_parse_extract.sql</h4>
+        <p>Creates stored procedure <code>EXTRACT_PIPELINE_A(filename, customer_id)</code>. Uses AI_EXTRACT with schema definitions.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">13</div>
+      <div class="tl-body">
+        <h4>13_pipeline_b_ai_parse_complete.sql</h4>
+        <p>Creates stored procedure <code>EXTRACT_PIPELINE_B(filename, customer_id, model)</code>. Default: <code>mistral-large2</code>.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">14</div>
+      <div class="tl-body">
+        <h4>14_validation_view.sql</h4>
+        <p>Creates 3 validation views comparing extraction output against ground-truth table (placeholder: <code>SRS_CONTRACT_CUSTOMER_PRICING_VALIDATION</code>).</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">15</div>
+      <div class="tl-body">
+        <h4>15_run_all.sql</h4>
+        <p>Orchestrator script. Calls both pipelines for BMS + Sanofi, runs Pipeline B with 3 models, then runs all verification queries.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">16</div>
+      <div class="tl-body">
+        <h4>16_deploy_streamlit.sql</h4>
+        <p>Creates Streamlit object <code>MSA_EXTRACTION_APP</code> in <code>SRS_AI_CONTRACTS.AGENTS</code>. Includes <code>PUT</code> command for <code>app.py</code>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 4 — PIPELINE A
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 4</div>
+    <h2>Pipeline A — AI_PARSE_DOCUMENT + AI_EXTRACT</h2>
+    <p>Schema-driven extraction using arctic-extract model with parallel array output</p>
+  </div>
+
+  <div class="callout info">
+    <div class="icon">📄</div>
+    <div class="body"><strong>File:</strong> <code>pipelines/12_pipeline_a_ai_parse_extract.sql</code> &nbsp;|&nbsp; <strong>Procedure:</strong> <code>SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_A(P_FILENAME, P_CUSTOMER_ID)</code></div>
+  </div>
+
+  <h3>How Pipeline A Works</h3>
+
+  <div class="flow">
+    <div class="flow-box sky">PDF in Stage<span class="flow-label">@CONTRACT_STAGE</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">AI_PARSE_DOCUMENT<span class="flow-label">LAYOUT, page_split=TRUE</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box cache">PARSED_CONTRACTS_TEXT<span class="flow-label">per-page Markdown cache</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Keyword Filter<span class="flow-label">storage/ambient/etc.</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">AI_EXTRACT<span class="flow-label">schema + per page</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">ARRAY_GENERATE_RANGE<span class="flow-label">flatten to rows</span></div>
+  </div>
+
+  <h3>Step 1 — Parse with Cache Check</h3>
+  <pre><code><span class="cmt">-- Cache check: only parse if not already in table</span>
+<span class="kw">LET</span> already_parsed <span class="kw">NUMBER</span>;
+<span class="kw">SELECT</span> <span class="fn">COUNT</span>(*) <span class="kw">INTO</span> :already_parsed
+<span class="kw">FROM</span> SRS_AI_CONTRACTS.RAW_DATA.PARSED_CONTRACTS_TEXT
+<span class="kw">WHERE</span> FILENAME = :P_FILENAME;
+
+<span class="kw">IF</span> (:already_parsed = <span class="num-c">0</span>) <span class="kw">THEN</span>
+    <span class="kw">LET</span> parsed <span class="kw">VARIANT</span>;
+    <span class="kw">SELECT</span> <span class="fn">AI_PARSE_DOCUMENT</span>(
+        <span class="fn">TO_FILE</span>(<span class="str">'@SRS_AI_CONTRACTS.RAW_DATA.CONTRACT_STAGE'</span>, :P_FILENAME),
+        {<span class="str">'mode'</span>: <span class="str">'LAYOUT'</span>, <span class="str">'page_split'</span>: <span class="kw">TRUE</span>}
+    ) <span class="kw">INTO</span> :parsed;
+
+    <span class="cmt">-- Insert one row per page into cache</span>
+    <span class="kw">INSERT INTO</span> PARSED_CONTRACTS_TEXT (FILENAME, CUSTOMER_ID, PAGE_INDEX, PAGE_TEXT, TOTAL_PAGES)
+    <span class="kw">SELECT</span> :P_FILENAME, :P_CUSTOMER_ID,
+           p.index::<span class="kw">NUMBER</span>,
+           p.value:content::<span class="kw">VARCHAR</span>,
+           :parsed:metadata:pageCount::<span class="kw">NUMBER</span>
+    <span class="kw">FROM TABLE</span>(<span class="fn">FLATTEN</span>(input => :parsed:pages)) p;
+<span class="kw">END IF</span>;</code></pre>
+
+  <h3>Step 2 — AI_EXTRACT with Schema Definition</h3>
+  <pre><code><span class="kw">SELECT</span>
+    p.FILENAME,
+    <span class="fn">AI_EXTRACT</span>(
+        p.PAGE_TEXT,
+        responseFormat => {
+            <span class="str">'schema'</span>: {
+                <span class="str">'type'</span>: <span class="str">'object'</span>,
+                <span class="str">'properties'</span>: {
+                    <span class="str">'storage_rows'</span>: {
+                        <span class="str">'description'</span>: <span class="str">'All rows from storage pricing tables...'</span>,
+                        <span class="str">'type'</span>: <span class="str">'object'</span>,
+                        <span class="str">'column_ordering'</span>: [<span class="str">'temperature'</span>, <span class="str">'sample_size_label'</span>, ...],
+                        <span class="str">'properties'</span>: {
+                            <span class="str">'temperature'</span>:       {<span class="str">'type'</span>: <span class="str">'array'</span>},
+                            <span class="str">'sample_size_label'</span>: {<span class="str">'type'</span>: <span class="str">'array'</span>},
+                            <span class="str">'qty_tier_label'</span>:    {<span class="str">'type'</span>: <span class="str">'array'</span>},
+                            <span class="str">'price_usd'</span>:         {<span class="str">'type'</span>: <span class="str">'array'</span>},
+                            <span class="str">'price_eur'</span>:         {<span class="str">'type'</span>: <span class="str">'array'</span>},
+                            <span class="str">'region'</span>:            {<span class="str">'type'</span>: <span class="str">'array'</span>}
+                        }
+                    }
+                }
+            }
+        }
+    ):response <span class="kw">AS</span> extraction
+<span class="kw">FROM</span> PARSED_CONTRACTS_TEXT p
+<span class="kw">WHERE</span> p.FILENAME = :P_FILENAME
+  <span class="kw">AND</span> (LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%storage%'</span>
+       <span class="kw">OR</span> LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%ambient%'</span> ...)</code></pre>
+
+  <h3>Step 3 — ARRAY_GENERATE_RANGE Flatten Pattern</h3>
+  <p>AI_EXTRACT returns parallel arrays for each column. This pattern converts parallel arrays into individual rows:</p>
+  <pre><code><span class="cmt">-- Flatten parallel arrays: temperature[], price_usd[], qty_tier[] → rows</span>
+flattened <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        pe.FILENAME,
+        pe.extraction:storage_rows:temperature[idx.value]::<span class="kw">VARCHAR</span>       <span class="kw">AS</span> temperature,
+        pe.extraction:storage_rows:sample_size_label[idx.value]::<span class="kw">VARCHAR</span> <span class="kw">AS</span> sample_size,
+        pe.extraction:storage_rows:price_usd[idx.value]::<span class="kw">VARCHAR</span>         <span class="kw">AS</span> price_usd
+    <span class="kw">FROM</span> page_extractions pe,
+    <span class="fn">TABLE</span>(<span class="fn">FLATTEN</span>(
+        input => <span class="fn">ARRAY_GENERATE_RANGE</span>(
+            <span class="num-c">0</span>, <span class="fn">ARRAY_SIZE</span>(pe.extraction:storage_rows:temperature)
+        ),
+        MODE => <span class="str">'ARRAY'</span>
+    )) <span class="kw">AS</span> idx
+)</code></pre>
+
+  <div class="callout tip">
+    <div class="icon">✓</div>
+    <div class="body"><strong>Why ARRAY_GENERATE_RANGE?</strong> AI_EXTRACT's parallel-array schema (all columns as equal-length arrays) is the most token-efficient format. <code>ARRAY_GENERATE_RANGE(0, N)</code> generates index positions 0 to N-1, which are then used to index into all parallel arrays simultaneously — one row per index position.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 5 — PIPELINE B
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 5</div>
+    <h2>Pipeline B — AI_PARSE_DOCUMENT + AI_COMPLETE</h2>
+    <p>Prompt-based extraction with swappable LLM models and JSON response enforcement</p>
+  </div>
+
+  <div class="callout info">
+    <div class="icon">📄</div>
+    <div class="body"><strong>File:</strong> <code>pipelines/13_pipeline_b_ai_parse_complete.sql</code> &nbsp;|&nbsp; <strong>Procedure:</strong> <code>SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_B(P_FILENAME, P_CUSTOMER_ID, P_MODEL DEFAULT 'mistral-large2')</code></div>
+  </div>
+
+  <h3>Key Differences from Pipeline A</h3>
+  <div class="compare-row">
+    <div class="pipe-card a">
+      <h3>Pipeline A — AI_EXTRACT</h3>
+      <ul style="margin-left:16px; line-height:1.9; font-size:12px;">
+        <li>Schema-defined via JSON object spec</li>
+        <li>Model: always <code>arctic-extract</code></li>
+        <li>Output: parallel arrays → ARRAY_GENERATE_RANGE</li>
+        <li>Output cap: 4,096 tokens per table question</li>
+        <li>Best for: consistent schema, high throughput</li>
+      </ul>
+    </div>
+    <div class="pipe-card b">
+      <h3>Pipeline B — AI_COMPLETE</h3>
+      <ul style="margin-left:16px; line-height:1.9; font-size:12px;">
+        <li>Prompt-based with detailed instructions</li>
+        <li>Model: parameter — swap at call time</li>
+        <li>Output: JSON object-per-row → LATERAL FLATTEN</li>
+        <li>Output: up to model's output token limit</li>
+        <li>Best for: complex reasoning, model comparison</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Model Guard — Blocking snowflake-arctic</h3>
+  <pre><code><span class="cmt">-- GUARD: Block snowflake-arctic — 4,096 token context window too small</span>
+<span class="kw">IF</span> (:P_MODEL = <span class="str">'snowflake-arctic'</span>) <span class="kw">THEN</span>
+    <span class="kw">RETURN</span> <span class="str">'ERROR: snowflake-arctic has a 4,096 token total context window '</span>
+        || <span class="str">'(input + output combined), which is insufficient for dense MSA pricing tables. '</span>
+        || <span class="str">'Use mistral-large2, llama3.3-70b, claude-4-sonnet, or llama4-maverick instead.'</span>;
+<span class="kw">END IF</span>;</code></pre>
+
+  <h3>AI_COMPLETE with JSON Response Format</h3>
+  <pre><code><span class="fn">TRY_PARSE_JSON</span>(
+    <span class="fn">AI_COMPLETE</span>(
+        :P_MODEL,
+        <span class="str">'You are extracting data from an Azenta Life Sciences Rate Card page. '</span>
+        || <span class="str">'Extract ALL storage pricing rows into JSON with key "storage_rows". '</span>
+        || <span class="str">'"storage_rows" must be an array where each element has EXACTLY these keys: '</span>
+        || <span class="str">'temperature, sample_size_label, min_sample_ml, max_sample_ml, '</span>
+        || <span class="str">'cubic_foot_max, qty_tier_label, min_qty, max_qty, '</span>
+        || <span class="str">'price_usd, price_eur, price_sgd, region. '</span>
+        || <span class="str">'If no storage pricing on this page, return {"storage_rows": []}. '</span>
+        || <span class="str">'Return ONLY valid JSON. No explanation, no markdown fences.'</span>
+        || <span class="fn">CHR</span>(<span class="num-c">10</span>) || <span class="str">'PAGE CONTENT:'</span> || <span class="fn">CHR</span>(<span class="num-c">10</span>) || p.PAGE_TEXT,
+        {<span class="str">'response_format'</span>: {<span class="str">'type'</span>: <span class="str">'json'</span>}}  <span class="cmt">-- enforces structured output</span>
+    )
+) <span class="kw">AS</span> result</code></pre>
+
+  <h3>Pipeline B Output Flatten — LATERAL FLATTEN on object-per-row JSON</h3>
+  <pre><code><span class="cmt">-- Pipeline B returns array of objects (one per row) — use LATERAL FLATTEN</span>
+<span class="kw">FROM</span> page_completions pc,
+<span class="kw">LATERAL</span> <span class="fn">FLATTEN</span>(input => pc.result:storage_rows) row
+
+<span class="kw">SELECT</span>
+    row.value:temperature::<span class="kw">VARCHAR</span>       <span class="kw">AS</span> TEMPERATURE,
+    row.value:sample_size_label::<span class="kw">VARCHAR</span> <span class="kw">AS</span> SAMPLE_SIZE,
+    row.value:price_usd::<span class="kw">VARCHAR</span>         <span class="kw">AS</span> PRICE</code></pre>
+
+  <h3>Supported Models</h3>
+  <table>
+    <thead><tr><th>Model</th><th>Context Window</th><th>Status</th><th>Best Use Case</th></tr></thead>
+    <tbody>
+      <tr class="model-best"><td>mistral-large2</td><td>128,000 tokens</td><td><span class="badge green">Default</span></td><td>Best quality/cost balance</td></tr>
+      <tr><td>llama3.3-70b</td><td>128,000 tokens</td><td><span class="badge sky">Supported</span></td><td>Fastest, most cost-effective</td></tr>
+      <tr><td>claude-4-sonnet</td><td>200,000 tokens</td><td><span class="badge blue">Supported</span></td><td>Highest accuracy, complex tables</td></tr>
+      <tr><td>llama4-maverick</td><td>128,000 tokens</td><td><span class="badge purple">Supported</span></td><td>Strong alternative to mistral</td></tr>
+      <tr class="model-blocked"><td>snowflake-arctic</td><td>4,096 tokens total</td><td><span class="badge red">BLOCKED</span></td><td>Context window insufficient for dense pricing pages</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 6 — TOKEN LIMIT STRATEGY
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 6</div>
+    <h2>Token Limit Strategy</h2>
+    <p>How the pipeline avoids the AI_EXTRACT 4,096 token output cap and AI_COMPLETE context limits</p>
+  </div>
+
+  <h3>Understanding the Token Limits</h3>
+  <div class="callout danger">
+    <div class="icon">⚠</div>
+    <div class="body"><strong>Common Misconception:</strong> The 4,096 token limit is NOT a global context window limit. It is the <em>output token cap per table question</em> in AI_EXTRACT. A dense pricing page with 6 temperature rows × 11 sample sizes × 6 quantity tiers = 396 cells can overflow this cap when extracted from the full document at once.</div>
+  </div>
+
+  <table>
+    <thead><tr><th>Limit Type</th><th>Value</th><th>Applies To</th><th>Solution</th></tr></thead>
+    <tbody>
+      <tr><td>AI_EXTRACT output per table question</td><td>4,096 tokens</td><td>Pipeline A</td><td><code>page_split=TRUE</code> — extract per page</td></tr>
+      <tr><td>arctic-extract context window</td><td>128K tokens</td><td>Pipeline A</td><td>No action needed — well within limit</td></tr>
+      <tr><td>snowflake-arctic total context</td><td>4,096 tokens</td><td>Pipeline B guard</td><td>Blocked via explicit RETURN error</td></tr>
+      <tr><td>mistral-large2 / llama3.3 context</td><td>128K tokens</td><td>Pipeline B</td><td>Per-page processing, typically &lt;2K tokens input</td></tr>
+      <tr><td>claude-4-sonnet context</td><td>200K tokens</td><td>Pipeline B</td><td>Could handle full document, but page-split used for consistency</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why page_split=TRUE Solves the Problem</h3>
+
+  <div class="grid-2">
+    <div class="card orange no-break">
+      <h4>Without page_split (problematic)</h4>
+      <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+        <li>Full 18-page Sanofi PDF = ~36,000 tokens input</li>
+        <li>AI_EXTRACT attempts to extract all 396 cells at once</li>
+        <li>Output exceeds 4,096 token cap → truncation</li>
+        <li>Missing rows, corrupted arrays</li>
+      </ul>
+    </div>
+    <div class="card green no-break">
+      <h4>With page_split=TRUE (correct)</h4>
+      <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+        <li>Each page = ~1,000–3,000 tokens input</li>
+        <li>Each page has at most 1–2 temperature blocks</li>
+        <li>Output per page ≈ 200–800 tokens (well under 4,096)</li>
+        <li>Complete extraction across all pages</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Keyword Pre-filtering</h3>
+  <p>Before calling AI functions, both pipelines filter pages with SQL LIKE conditions:</p>
+  <pre><code><span class="kw">WHERE</span> p.FILENAME = :P_FILENAME
+  <span class="kw">AND</span> (
+      LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%storage%'</span>
+      <span class="kw">OR</span> LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%ambient%'</span>
+      <span class="kw">OR</span> LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%refrigerat%'</span>
+      <span class="kw">OR</span> LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%nitrogen%'</span>
+      <span class="kw">OR</span> LOWER(p.PAGE_TEXT) <span class="kw">LIKE</span> <span class="str">'%-80%'</span>
+  )</code></pre>
+  <p style="font-size:12px;">For a 13-page BMS document, this typically reduces AI calls from 13 to 4–6 pricing-relevant pages, cutting compute costs by ~50–60%.</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 7 — OUTPUT TABLES
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 7</div>
+    <h2>Output Tables (SI.PUBLIC)</h2>
+    <p>Storage pricing and management fee tables with full audit trail</p>
+  </div>
+
+  <h3>Table 1 — Storage Pricing</h3>
+  <p><code>SI.PUBLIC.SRS_CONTRACT_CUSTOMER_PRICING_ALL_CURR_DATA_TEST</code></p>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>FILENAME</td><td>VARCHAR</td><td>Source PDF filename</td></tr>
+      <tr><td>REGION</td><td>VARCHAR</td><td>North America, Griesheim, Singapore, Beijing</td></tr>
+      <tr><td>CURRENCY</td><td>VARCHAR(3)</td><td>USD, EUR, SGD — derived from region</td></tr>
+      <tr><td>TEMPERATURE</td><td>VARCHAR</td><td>Storage condition: Ambient, Refrigerated, -70C/-80C, Nitrogen Chamber</td></tr>
+      <tr><td>SAMPLE_SIZE</td><td>VARCHAR</td><td>Column header: SBS tube ≤1.4mL, 5-10mL, etc.</td></tr>
+      <tr><td>QUANTITY_TIER</td><td>VARCHAR</td><td>Full tier label: 1-500,000 / &gt;3,000,000</td></tr>
+      <tr><td>PRICE</td><td>VARCHAR</td><td>Price in regional currency</td></tr>
+      <tr><td>MAX_QUANTITY_TIER</td><td>NUMBER</td><td>Numeric upper bound of tier</td></tr>
+      <tr><td>MIN_QUANTITY_TIER</td><td>NUMBER</td><td>Numeric lower bound of tier</td></tr>
+      <tr><td>CUSTOMER_ID</td><td>VARCHAR</td><td>BMS, SANOFI, etc.</td></tr>
+      <tr><td>CUBIC_FOOT_MAX</td><td>FLOAT</td><td>For $/Cu.Ft. pricing notation</td></tr>
+      <tr><td>MIN_SAMPLE_SIZE</td><td>FLOAT</td><td>Volume in mL (parsed from label)</td></tr>
+      <tr><td>MAX_SAMPLE_SIZE</td><td>FLOAT</td><td>Volume in mL (parsed from label)</td></tr>
+      <tr><td>TRANSACTION_TYPE</td><td>VARCHAR</td><td>Always 'STORAGE' for this table</td></tr>
+      <tr><td><strong>EXTRACTION_METHOD</strong></td><td>VARCHAR(100)</td><td>AI_PARSE+AI_EXTRACT or AI_PARSE+AI_COMPLETE_mistral-large2</td></tr>
+      <tr><td><strong>EXTRACTED_AT</strong></td><td>TIMESTAMP</td><td>DEFAULT CURRENT_TIMESTAMP — audit column</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Table 2 — Management Fees</h3>
+  <p><code>SI.PUBLIC.SRS_CONTRACT_CUSTOMER_SAMPLE_MGMT_PRICING_TEST</code></p>
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>FILENAME</td><td>VARCHAR</td><td>Source PDF filename</td></tr>
+      <tr><td>CUSTOMER_ID</td><td>VARCHAR</td><td>BMS, SANOFI, etc.</td></tr>
+      <tr><td>FEE_CATEGORY</td><td>VARCHAR</td><td>Project Initiation Fees, Sample Administration, Lab Services, etc.</td></tr>
+      <tr><td>FEE_NAME</td><td>VARCHAR</td><td>Specific fee: Per Project Definition, Registration, Retrieval per sample</td></tr>
+      <tr><td>CURRENCY</td><td>VARCHAR(3)</td><td>USD (primary), EUR, SGD</td></tr>
+      <tr><td>PRICE</td><td>VARCHAR</td><td>Price with unit notation</td></tr>
+      <tr><td>UNIT</td><td>VARCHAR</td><td>per sample, per hour, per project, per shipment</td></tr>
+      <tr><td>DESCRIPTION</td><td>VARCHAR</td><td>Fee description from rightmost column</td></tr>
+      <tr><td><strong>EXTRACTION_METHOD</strong></td><td>VARCHAR(100)</td><td>Audit: which pipeline and model extracted this row</td></tr>
+      <tr><td><strong>EXTRACTED_AT</strong></td><td>TIMESTAMP</td><td>DEFAULT CURRENT_TIMESTAMP</td></tr>
+    </tbody>
+  </table>
+
+  <h3>IDENTIFIER Pattern for Schema Portability</h3>
+  <pre><code><span class="cmt">-- Set at top of each script — change once to point at any schema</span>
+<span class="kw">SET</span> DB_NAME     = <span class="str">'SI'</span>;
+<span class="kw">SET</span> SCHEMA_NAME = <span class="str">'PUBLIC'</span>;
+
+<span class="cmt">-- Used in stored procedures with IDENTIFIER() for dynamic table reference</span>
+<span class="kw">INSERT INTO</span> <span class="fn">IDENTIFIER</span>($DB_NAME || <span class="str">'.'</span> || $SCHEMA_NAME || <span class="str">'.SRS_CONTRACT_CUSTOMER_PRICING_ALL_CURR_DATA_TEST'</span>)
+    ...</code></pre>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 8 — VALIDATION VIEWS
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 8</div>
+    <h2>Validation Views</h2>
+    <p>Ground-truth comparison infrastructure for accuracy measurement</p>
+  </div>
+
+  <div class="callout info">
+    <div class="icon">📄</div>
+    <div class="body"><strong>File:</strong> <code>pipelines/14_validation_view.sql</code> &nbsp;|&nbsp; <strong>Ground-truth table:</strong> Configurable via <code>SET VALIDATION_PRICING_TABLE = 'SI.PUBLIC.SRS_CONTRACT_CUSTOMER_PRICING_VALIDATION'</code></div>
+  </div>
+
+  <h3>Three Validation Views</h3>
+  <table>
+    <thead><tr><th>View Name</th><th>Schema</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>EXTRACTION_VALIDATION_PRICING</code></td><td>SRS_AI_CONTRACTS.ANALYTICS</td><td>Row-level storage pricing comparison vs ground truth</td></tr>
+      <tr><td><code>EXTRACTION_VALIDATION_MGMT</code></td><td>SRS_AI_CONTRACTS.ANALYTICS</td><td>Row-level management fee comparison vs ground truth</td></tr>
+      <tr><td><code>EXTRACTION_VALIDATION_SUMMARY</code></td><td>SRS_AI_CONTRACTS.ANALYTICS</td><td>Aggregate accuracy metrics per extraction method</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Match Status Logic</h3>
+  <table>
+    <thead><tr><th>Status</th><th>Condition</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge green">EXACT_MATCH</span></td><td>extracted price = expected price (string)</td><td>Perfect extraction</td></tr>
+      <tr><td><span class="badge sky">NEAR_MATCH</span></td><td>prices within 1% after numeric parse</td><td>Rounding or formatting difference</td></tr>
+      <tr><td><span class="badge blue">WITHIN_1PCT</span></td><td>ABS(extracted - expected) / expected &lt; 0.01</td><td>Minor numeric deviation</td></tr>
+      <tr><td><span class="badge orange">MISMATCH</span></td><td>Both have values but differ &gt; 1%</td><td>Extraction error — needs review</td></tr>
+      <tr><td><span class="badge purple">NO_EXPECTED</span></td><td>Extracted row has no ground-truth match</td><td>Hallucinated row or unlabeled data</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Validation Summary Query Pattern</h3>
+  <pre><code><span class="kw">SELECT</span>
+    EXTRACTION_METHOD,
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_rows,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> MATCH_STATUS <span class="kw">IN</span> (<span class="str">'EXACT_MATCH'</span>, <span class="str">'NEAR_MATCH'</span>, <span class="str">'WITHIN_1PCT'</span>) <span class="kw">THEN</span> <span class="num-c">1</span> <span class="kw">ELSE</span> <span class="num-c">0</span> <span class="kw">END</span>) <span class="kw">AS</span> matched_rows,
+    <span class="fn">ROUND</span>(<span class="num-c">100.0</span> * <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> MATCH_STATUS <span class="kw">IN</span> (<span class="str">'EXACT_MATCH'</span>, ...) <span class="kw">THEN</span> <span class="num-c">1</span> <span class="kw">ELSE</span> <span class="num-c">0</span> <span class="kw">END</span>)
+         / <span class="fn">NULLIF</span>(<span class="fn">COUNT</span>(*), <span class="num-c">0</span>), <span class="num-c">2</span>) <span class="kw">AS</span> accuracy_pct
+<span class="kw">FROM</span> SRS_AI_CONTRACTS.ANALYTICS.EXTRACTION_VALIDATION_PRICING
+<span class="kw">GROUP BY</span> EXTRACTION_METHOD
+<span class="kw">ORDER BY</span> accuracy_pct <span class="kw">DESC</span>;</code></pre>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 9 — STREAMLIT APPLICATION
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 9</div>
+    <h2>Streamlit Application</h2>
+    <p>5-tab interactive app deployed as Streamlit in Snowflake</p>
+  </div>
+
+  <div class="callout info">
+    <div class="icon">📄</div>
+    <div class="body"><strong>App file:</strong> <code>streamlit/app.py</code> (390 lines) &nbsp;|&nbsp; <strong>Object:</strong> <code>SRS_AI_CONTRACTS.AGENTS.MSA_EXTRACTION_APP</code> &nbsp;|&nbsp; Deploy: <code>pipelines/16_deploy_streamlit.sql</code></div>
+  </div>
+
+  <h3>Application Tabs</h3>
+  <div class="grid-2">
+    <div class="card blue no-break">
+      <h4>Tab 1 — Run Pipeline</h4>
+      <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+        <li>File selector (BMS or Sanofi PDF)</li>
+        <li>Pipeline selector (A or B)</li>
+        <li>Model dropdown for Pipeline B (excludes snowflake-arctic)</li>
+        <li>Live CALL output with success/error indicators</li>
+        <li>Row count summary after completion</li>
+      </ul>
+    </div>
+    <div class="card sky no-break">
+      <h4>Tab 2 — Storage Pricing</h4>
+      <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+        <li>Customer filter dropdown</li>
+        <li>Temperature filter</li>
+        <li>Full paginated data table</li>
+        <li>Row count and last extracted timestamp</li>
+      </ul>
+    </div>
+    <div class="card green no-break">
+      <h4>Tab 3 — Management Fees</h4>
+      <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+        <li>Customer + fee category filters</li>
+        <li>Full fee table with unit and description</li>
+        <li>Group by fee category summary</li>
+      </ul>
+    </div>
+    <div class="card orange no-break">
+      <h4>Tab 4 — A vs B Comparison</h4>
+      <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+        <li>Side-by-side row comparison per customer</li>
+        <li>Diff highlighting: price mismatches in red</li>
+        <li>Rows present in A but missing in B: yellow</li>
+        <li>Model selector for B pipeline comparison</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card blue no-break" style="max-width:500px;">
+    <h4>Tab 5 — Validation</h4>
+    <ul style="margin-left:16px; line-height:1.8; font-size:12px;">
+      <li>Accuracy summary by extraction method</li>
+      <li>Bar chart of match status distribution</li>
+      <li>Row-level detail with match status badges</li>
+      <li>Requires ground-truth validation table to be populated</li>
+    </ul>
+  </div>
+
+  <h3>Key Implementation Details</h3>
+  <pre><code><span class="kw">from</span> snowflake.snowpark.context <span class="kw">import</span> get_active_session
+
+<span class="cmt"># Establish Snowpark session (Streamlit in Snowflake pattern)</span>
+session = get_active_session()
+
+<span class="cmt"># Run pipeline procedure</span>
+result = session.sql(
+    <span class="fn">f</span><span class="str">"CALL SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_{pipeline}('{filename}', '{customer_id}'</span>"
+    + (<span class="str">f", '{model}'"</span> <span class="kw">if</span> pipeline == <span class="str">'B'</span> <span class="kw">else</span> <span class="str">""</span>) + <span class="str">")"</span>
+).collect()
+
+<span class="cmt"># Query output tables to Pandas for display</span>
+df = session.sql(<span class="str">"""
+    SELECT * FROM SI.PUBLIC.SRS_CONTRACT_CUSTOMER_PRICING_ALL_CURR_DATA_TEST
+    WHERE CUSTOMER_ID = ? ORDER BY TEMPERATURE, SAMPLE_SIZE
+"""</span>, params=[selected_customer]).to_pandas()</code></pre>
+
+  <h3>Deployment</h3>
+  <pre><code><span class="cmt">-- 1. Upload app.py to Streamlit stage</span>
+<span class="kw">PUT</span> <span class="str">'file:///path/to/streamlit/app.py'</span>
+    @SRS_AI_CONTRACTS.RAW_DATA.STREAMLIT_STAGE
+    AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
+
+<span class="cmt">-- 2. Create the Streamlit object</span>
+<span class="kw">CREATE OR REPLACE STREAMLIT</span> SRS_AI_CONTRACTS.AGENTS.MSA_EXTRACTION_APP
+    ROOT_LOCATION = <span class="str">'@SRS_AI_CONTRACTS.RAW_DATA.STREAMLIT_STAGE'</span>
+    MAIN_FILE = <span class="str">'app.py'</span>
+    QUERY_WAREHOUSE = <span class="str">'SRS_CONTRACTS_WH'</span>;</code></pre>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 10 — DEPLOYMENT GUIDE
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 10</div>
+    <h2>Deployment Guide</h2>
+    <p>Step-by-step quickstart for running the pipeline end-to-end</p>
+  </div>
+
+  <h3>Prerequisites</h3>
+  <ul style="margin:8px 0 16px 20px; line-height:2;">
+    <li>Snowflake account with Cortex AI enabled</li>
+    <li>Database <code>SRS_AI_CONTRACTS</code> deployed (run <code>deploy/01_setup_database.sql</code>)</li>
+    <li>Database <code>SI</code> with schema <code>PUBLIC</code> accessible</li>
+    <li>PDFs locally: <code>BMS - MSA AMD 3 06Jan2026 FE.pdf</code>, <code>Sanofi_MSA.pdf</code></li>
+    <li>Snowflake CLI with connection <code>DEMO</code> configured</li>
+  </ul>
+
+  <h3>Quick Start (5 Steps)</h3>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot">1</div>
+      <div class="tl-body">
+        <h4>Create extraction tables</h4>
+        <pre style="margin:4px 0;"><code>snow sql -f pipelines/10_create_extraction_tables.sql -c DEMO</code></pre>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">2</div>
+      <div class="tl-body">
+        <h4>Upload PDFs to stage</h4>
+        <pre style="margin:4px 0;"><code>snow sql -f pipelines/11_upload_pdfs.sql -c DEMO</code></pre>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">3</div>
+      <div class="tl-body">
+        <h4>Deploy both pipeline procedures</h4>
+        <pre style="margin:4px 0;"><code>snow sql -f pipelines/12_pipeline_a_ai_parse_extract.sql -c DEMO
+snow sql -f pipelines/13_pipeline_b_ai_parse_complete.sql -c DEMO</code></pre>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">4</div>
+      <div class="tl-body">
+        <h4>Run all pipelines</h4>
+        <pre style="margin:4px 0;"><code>snow sql -f pipelines/15_run_all.sql -c DEMO</code></pre>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">5</div>
+      <div class="tl-body">
+        <h4>Deploy Streamlit app</h4>
+        <pre style="margin:4px 0;"><code>snow sql -f pipelines/16_deploy_streamlit.sql -c DEMO</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Manual Pipeline Calls</h3>
+  <pre><code><span class="cmt">-- Pipeline A (AI_EXTRACT)</span>
+<span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_A(<span class="str">'BMS - MSA AMD 3 06Jan2026 FE.pdf'</span>, <span class="str">'BMS'</span>);
+<span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_A(<span class="str">'Sanofi_MSA.pdf'</span>, <span class="str">'SANOFI'</span>);
+
+<span class="cmt">-- Pipeline B — default model (mistral-large2)</span>
+<span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_B(<span class="str">'BMS - MSA AMD 3 06Jan2026 FE.pdf'</span>, <span class="str">'BMS'</span>);
+
+<span class="cmt">-- Pipeline B — with specific model</span>
+<span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_B(<span class="str">'Sanofi_MSA.pdf'</span>, <span class="str">'SANOFI'</span>, <span class="str">'llama3.3-70b'</span>);
+<span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_B(<span class="str">'Sanofi_MSA.pdf'</span>, <span class="str">'SANOFI'</span>, <span class="str">'claude-4-sonnet'</span>);
+
+<span class="cmt">-- Pipeline B — blocked model (returns error message, no exception)</span>
+<span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_B(<span class="str">'Sanofi_MSA.pdf'</span>, <span class="str">'SANOFI'</span>, <span class="str">'snowflake-arctic'</span>);
+<span class="cmt">-- Returns: ERROR: snowflake-arctic has a 4,096 token total context window...</span></code></pre>
+
+  <h3>Batch Processing (600 MSAs)</h3>
+  <pre><code><span class="cmt">-- Batch pattern: iterate over a list of filenames</span>
+<span class="kw">DECLARE</span>
+    c <span class="kw">CURSOR FOR</span>
+        <span class="kw">SELECT</span> FILENAME, CUSTOMER_ID <span class="kw">FROM</span> SRS_AI_CONTRACTS.RAW_DATA.CONTRACT_METADATA
+        <span class="kw">WHERE</span> PROCESSED = <span class="kw">FALSE</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">FOR</span> rec <span class="kw">IN</span> c <span class="kw">DO</span>
+        <span class="kw">CALL</span> SRS_AI_CONTRACTS.RAW_DATA.EXTRACT_PIPELINE_A(rec.FILENAME, rec.CUSTOMER_ID);
+        <span class="kw">UPDATE</span> SRS_AI_CONTRACTS.RAW_DATA.CONTRACT_METADATA
+            <span class="kw">SET</span> PROCESSED = <span class="kw">TRUE</span> <span class="kw">WHERE</span> FILENAME = rec.FILENAME;
+    <span class="kw">END FOR</span>;
+<span class="kw">END</span>;</code></pre>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 11 — MODEL SELECTION
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 11</div>
+    <h2>Model Selection Guide</h2>
+    <p>Context windows, cost/quality tradeoffs for Pipeline B model parameter</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Context Window</th>
+        <th>Relative Cost</th>
+        <th>Quality</th>
+        <th>Best For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="model-best">
+        <td><strong>mistral-large2</strong> ⭐</td>
+        <td>128K tokens</td>
+        <td>Medium</td>
+        <td>★★★★☆</td>
+        <td>Default — best quality/cost balance for pricing extraction</td>
+      </tr>
+      <tr>
+        <td>llama3.3-70b</td>
+        <td>128K tokens</td>
+        <td>Low</td>
+        <td>★★★☆☆</td>
+        <td>Batch processing 600 docs — fastest and cheapest</td>
+      </tr>
+      <tr>
+        <td>claude-4-sonnet</td>
+        <td>200K tokens</td>
+        <td>High</td>
+        <td>★★★★★</td>
+        <td>Complex multi-region tables, validation of high-value contracts</td>
+      </tr>
+      <tr>
+        <td>llama4-maverick</td>
+        <td>128K tokens</td>
+        <td>Medium</td>
+        <td>★★★★☆</td>
+        <td>Alternative to mistral when comparing model outputs</td>
+      </tr>
+      <tr class="model-blocked">
+        <td>snowflake-arctic ✗</td>
+        <td>4,096 tokens total</td>
+        <td>Very Low</td>
+        <td>N/A</td>
+        <td>BLOCKED — insufficient context for any MSA pricing page</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warning">
+    <div class="icon">⚠</div>
+    <div class="body"><strong>Why is snowflake-arctic blocked?</strong> snowflake-arctic's <em>total</em> context window (input + output combined) is 4,096 tokens. A single pricing page from a Sanofi Rate Card is approximately 2,000–4,000 tokens. Even with page-splitting, the combined prompt + page text + JSON response would exceed this limit, causing truncated or empty responses. The guard in Pipeline B returns a descriptive error string instead of throwing an exception, enabling safe batch processing.</div>
+  </div>
+
+  <h3>Recommendation for 600 MSA Scale</h3>
+  <div class="grid-2">
+    <div class="card green no-break">
+      <h4>Phase 1: Bulk Extraction</h4>
+      <p>Use <strong>Pipeline A (AI_EXTRACT)</strong> with <code>arctic-extract</code> — schema-based, deterministic, lower per-token cost. Extract all 600 MSAs once into the output tables.</p>
+    </div>
+    <div class="card sky no-break">
+      <h4>Phase 2: Validation &amp; Comparison</h4>
+      <p>Run <strong>Pipeline B with llama3.3-70b</strong> on a 10% sample. Compare outputs in the Streamlit A vs B tab. Escalate to <code>claude-4-sonnet</code> for documents where Pipeline A shows low confidence.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 12 — SCALE ANALYSIS
+═══════════════════════════════════════════════════════════ -->
+<div class="content page-break">
+  <div class="section-header">
+    <div class="num">Section 12</div>
+    <h2>Scale Analysis — 600 MSA Documents</h2>
+    <p>Cost estimates, caching savings, and performance projections</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="stat-box"><div class="num">600</div><div class="lbl">MSA Documents</div></div>
+    <div class="stat-box"><div class="num">6,000</div><div class="lbl">Pages (avg 10/doc)</div></div>
+    <div class="stat-box"><div class="num">1×</div><div class="lbl">Parse per Document</div></div>
+  </div>
+
+  <h3>Parse Cache Savings</h3>
+  <p>Without caching, running both pipelines + 3 models would require parsing each document 5 times. With the cache:</p>
+  <table>
+    <thead><tr><th>Scenario</th><th>Parse Operations</th><th>Savings</th></tr></thead>
+    <tbody>
+      <tr><td>No cache (naive approach)</td><td>600 docs × 5 runs = 3,000 parses</td><td>—</td></tr>
+      <tr><td>With PARSED_CONTRACTS_TEXT cache</td><td>600 docs × 1 parse = 600 parses</td><td><strong>80% reduction in parse costs</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Per-Page Keyword Filtering Savings</h3>
+  <p>For a typical 10-page MSA, approximately 4–6 pages contain pricing tables. Keyword pre-filtering avoids calling AI functions on non-pricing pages:</p>
+  <table>
+    <thead><tr><th>Document</th><th>Total Pages</th><th>Pricing Pages (est.)</th><th>AI Calls Saved</th></tr></thead>
+    <tbody>
+      <tr><td>BMS MSA AMD 3</td><td>13</td><td>5–7</td><td>~46–62%</td></tr>
+      <tr><td>Sanofi MSA</td><td>18</td><td>8–10</td><td>~44–56%</td></tr>
+      <tr><td>Average 10-page MSA</td><td>10</td><td>4–6</td><td>~40–60%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Estimated Processing Capacity</h3>
+  <div class="callout tip">
+    <div class="icon">📊</div>
+    <div class="body">
+      <strong>Warehouse sizing:</strong> <code>SRS_CONTRACTS_WH</code> is XS (auto-suspend 60s). For batch processing 600 MSAs, upgrade to Small (2× credits) or use MULTI-CLUSTER to parallelize. SQL stored procedures can be called concurrently from a Snowflake Task DAG for optimal throughput.
+    </div>
+  </div>
+
+  <h3>End-to-End Run Summary for 2 Documents</h3>
+  <table>
+    <thead><tr><th>Step</th><th>Operation</th><th>BMS (13 pages)</th><th>Sanofi (18 pages)</th></tr></thead>
+    <tbody>
+      <tr><td>Parse</td><td>AI_PARSE_DOCUMENT (cached after first run)</td><td>13 pages</td><td>18 pages</td></tr>
+      <tr><td>Pipeline A — Storage</td><td>AI_EXTRACT per pricing page</td><td>~6 calls</td><td>~8 calls</td></tr>
+      <tr><td>Pipeline A — Fees</td><td>AI_EXTRACT per fee page</td><td>~4 calls</td><td>~6 calls</td></tr>
+      <tr><td>Pipeline B — Storage</td><td>AI_COMPLETE per pricing page × model</td><td>~6 calls/model</td><td>~8 calls/model</td></tr>
+      <tr><td>Pipeline B — Fees</td><td>AI_COMPLETE per fee page × model</td><td>~4 calls/model</td><td>~6 calls/model</td></tr>
+    </tbody>
+  </table>
+
+  <h3>GitHub Repository</h3>
+  <div class="card blue">
+    <p><strong>Repository:</strong> <code>https://github.com/sfc-gh-moahmed/srs-ai-contracts</code></p>
+    <p><strong>Files committed:</strong> All 7 pipeline scripts + <code>streamlit/app.py</code> + <code>msa_extraction_pipeline.md</code> (Marp presentation) + <code>README_PIPELINES.md</code> + this documentation</p>
+    <p><strong>Branch:</strong> <code>main</code></p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<div class="footer">
+  <strong>MSA Contract Extraction Pipeline</strong> &nbsp;|&nbsp;
+  Azenta Life Sciences × Snowflake Cortex AI &nbsp;|&nbsp;
+  Generated April 3, 2026 &nbsp;|&nbsp;
+  <strong>Confidential</strong>
+</div>
+
+</body>
+</html>
