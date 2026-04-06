@@ -1,0 +1,14 @@
+definition_version: 2
+entities:
+  sox_auth_dashboard:
+    type: streamlit
+    identifier:
+      name: SOX_AUTH_DASHBOARD
+      database: <TARGET_DATABASE>   # Replace with your database
+      schema: <TARGET_SCHEMA>       # Replace with your schema
+    query_warehouse: <WAREHOUSE>    # Replace with your warehouse
+    runtime_name: SYSTEM$ST_CONTAINER_RUNTIME_PY3_11
+    main_file: streamlit_app.py
+    artifacts:
+      - streamlit_app.py
+      - pyproject.toml
