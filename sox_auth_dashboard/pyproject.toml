@@ -1,8 +1,0 @@
-[project]
-name = "sox-auth-dashboard"
-version = "1.0.0"
-requires-python = ">=3.11"
-dependencies = [
-    "snowflake-connector-python>=3.3.0",
-    "streamlit[snowflake]>=1.54.0",
-]
